@@ -9,6 +9,7 @@ import com.likelion.medicast.entity.User;
 import com.likelion.medicast.repository.UserRepository;
 import com.likelion.medicast.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,12 @@ public class AuthService {
                 passwordEncoder.encode(request.password()),
                 request.name().trim()
         );
-        User savedUser = userRepository.save(user);
+        User savedUser;
+        try {
+            savedUser = userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DuplicateEmailException();
+        }
 
         return createAuthResponse(savedUser);
     }
