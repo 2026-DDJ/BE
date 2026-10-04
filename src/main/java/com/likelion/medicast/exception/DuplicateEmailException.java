@@ -1,4 +1,4 @@
-package com.likelion.medicast.auth.exception;
+package com.likelion.medicast.exception;
 
 public class DuplicateEmailException extends RuntimeException {
 

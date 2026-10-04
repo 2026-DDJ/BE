@@ -1,4 +1,4 @@
-package com.likelion.medicast.auth.dto;
+package com.likelion.medicast.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

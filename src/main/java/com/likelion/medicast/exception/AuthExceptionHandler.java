@@ -1,4 +1,4 @@
-package com.likelion.medicast.auth.exception;
+package com.likelion.medicast.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

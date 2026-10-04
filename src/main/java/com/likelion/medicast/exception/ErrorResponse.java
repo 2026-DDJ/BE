@@ -1,4 +1,4 @@
-package com.likelion.medicast.auth.exception;
+package com.likelion.medicast.exception;
 
 import java.time.LocalDateTime;
 

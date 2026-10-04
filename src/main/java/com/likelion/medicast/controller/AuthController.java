@@ -1,10 +1,10 @@
-package com.likelion.medicast.auth.controller;
+package com.likelion.medicast.controller;
 
-import com.likelion.medicast.auth.dto.AuthResponse;
-import com.likelion.medicast.auth.dto.LoginRequest;
-import com.likelion.medicast.auth.dto.SignupRequest;
-import com.likelion.medicast.auth.dto.UserResponse;
-import com.likelion.medicast.auth.service.AuthService;
+import com.likelion.medicast.dto.AuthResponse;
+import com.likelion.medicast.dto.LoginRequest;
+import com.likelion.medicast.dto.SignupRequest;
+import com.likelion.medicast.dto.UserResponse;
+import com.likelion.medicast.service.AuthService;
 import com.likelion.medicast.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

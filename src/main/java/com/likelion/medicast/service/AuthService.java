@@ -1,10 +1,10 @@
-package com.likelion.medicast.auth.service;
+package com.likelion.medicast.service;
 
-import com.likelion.medicast.auth.dto.AuthResponse;
-import com.likelion.medicast.auth.dto.LoginRequest;
-import com.likelion.medicast.auth.dto.SignupRequest;
-import com.likelion.medicast.auth.exception.DuplicateEmailException;
-import com.likelion.medicast.auth.exception.InvalidCredentialsException;
+import com.likelion.medicast.dto.AuthResponse;
+import com.likelion.medicast.dto.LoginRequest;
+import com.likelion.medicast.dto.SignupRequest;
+import com.likelion.medicast.exception.DuplicateEmailException;
+import com.likelion.medicast.exception.InvalidCredentialsException;
 import com.likelion.medicast.entity.User;
 import com.likelion.medicast.repository.UserRepository;
 import com.likelion.medicast.security.JwtTokenProvider;

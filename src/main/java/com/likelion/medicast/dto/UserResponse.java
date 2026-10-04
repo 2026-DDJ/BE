@@ -1,4 +1,4 @@
-package com.likelion.medicast.auth.dto;
+package com.likelion.medicast.dto;
 
 import com.likelion.medicast.entity.User;
 import com.likelion.medicast.security.AuthenticatedUser;
