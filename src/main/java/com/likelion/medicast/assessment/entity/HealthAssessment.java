@@ -35,41 +35,60 @@ public class HealthAssessment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Integer age;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Sex sex;
-
-    @Column(nullable = false, length = 100)
-    private String region;
+    @Column(name = "household_size", nullable = false)
+    private Integer householdSize;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "income_range", nullable = false, length = 30)
     private IncomeRange incomeRange;
 
-    @Column(nullable = false, precision = 5, scale = 2)
-    private BigDecimal bmi;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "health_insurance_type", nullable = false, length = 40)
+    private HealthInsuranceType healthInsuranceType;
 
-    @Column(name = "has_chronic_disease", nullable = false)
-    private boolean hasChronicDisease;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Region region;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "self_rated_health", nullable = false, length = 20)
     private SelfRatedHealth selfRatedHealth;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "smoking_status", nullable = false, length = 20)
-    private SmokingStatus smokingStatus;
+    @Column(name = "height_cm", nullable = false, precision = 10, scale = 4)
+    private BigDecimal heightCm;
+
+    @Column(name = "weight_kg", nullable = false, precision = 10, scale = 4)
+    private BigDecimal weightKg;
+
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal bmi;
+
+    @Column(nullable = false)
+    private boolean exercises;
+
+    @Column(name = "outpatient_visits_last_year", nullable = false)
+    private Integer outpatientVisitsLastYear;
+
+    @Column(name = "dental_visits_last_year", nullable = false)
+    private Integer dentalVisitsLastYear;
+
+    @Column(name = "has_private_health_insurance", nullable = false)
+    private boolean hasPrivateHealthInsurance;
+
+    @Column(name = "hospitalized_last_year", nullable = false)
+    private boolean hospitalizedLastYear;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "drinking_frequency", nullable = false, length = 30)
-    private DrinkingFrequency drinkingFrequency;
+    @Column(name = "activity_limitation", nullable = false, length = 20)
+    private ActivityLimitation activityLimitation;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "exercise_frequency", nullable = false, length = 30)
-    private ExerciseFrequency exerciseFrequency;
+    @Column(name = "anxiety_depression", nullable = false, length = 20)
+    private AnxietyDepression anxietyDepression;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 40)
+    private Occupation occupation;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -81,27 +100,39 @@ public class HealthAssessment {
 
     public HealthAssessment(
             User user,
-            Integer age,
-            Sex sex,
-            String region,
+            Integer householdSize,
             IncomeRange incomeRange,
-            BigDecimal bmi,
-            boolean hasChronicDisease,
+            HealthInsuranceType healthInsuranceType,
+            Region region,
             SelfRatedHealth selfRatedHealth,
-            SmokingStatus smokingStatus,
-            DrinkingFrequency drinkingFrequency,
-            ExerciseFrequency exerciseFrequency
+            BigDecimal heightCm,
+            BigDecimal weightKg,
+            BigDecimal bmi,
+            boolean exercises,
+            Integer outpatientVisitsLastYear,
+            Integer dentalVisitsLastYear,
+            boolean hasPrivateHealthInsurance,
+            boolean hospitalizedLastYear,
+            ActivityLimitation activityLimitation,
+            AnxietyDepression anxietyDepression,
+            Occupation occupation
     ) {
         this.user = user;
-        this.age = age;
-        this.sex = sex;
-        this.region = region;
+        this.householdSize = householdSize;
         this.incomeRange = incomeRange;
-        this.bmi = bmi;
-        this.hasChronicDisease = hasChronicDisease;
+        this.healthInsuranceType = healthInsuranceType;
+        this.region = region;
         this.selfRatedHealth = selfRatedHealth;
-        this.smokingStatus = smokingStatus;
-        this.drinkingFrequency = drinkingFrequency;
-        this.exerciseFrequency = exerciseFrequency;
+        this.heightCm = heightCm;
+        this.weightKg = weightKg;
+        this.bmi = bmi;
+        this.exercises = exercises;
+        this.outpatientVisitsLastYear = outpatientVisitsLastYear;
+        this.dentalVisitsLastYear = dentalVisitsLastYear;
+        this.hasPrivateHealthInsurance = hasPrivateHealthInsurance;
+        this.hospitalizedLastYear = hospitalizedLastYear;
+        this.activityLimitation = activityLimitation;
+        this.anxietyDepression = anxietyDepression;
+        this.occupation = occupation;
     }
 }
