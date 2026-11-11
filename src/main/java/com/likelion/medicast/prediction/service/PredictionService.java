@@ -1,11 +1,14 @@
 package com.likelion.medicast.prediction.service;
 
+import com.likelion.medicast.assessment.dto.HealthAssessmentInput;
 import com.likelion.medicast.assessment.entity.HealthAssessment;
-import com.likelion.medicast.assessment.repository.HealthAssessmentRepository;
+import com.likelion.medicast.assessment.service.HealthAssessmentService;
 import com.likelion.medicast.global.exception.ResourceNotFoundException;
 import com.likelion.medicast.prediction.dto.PredictionResponse;
 import com.likelion.medicast.prediction.entity.Prediction;
 import com.likelion.medicast.prediction.model.MedicalCostPredictor;
+import com.likelion.medicast.prediction.model.ModelFeatureMapper;
+import com.likelion.medicast.prediction.model.ModelFeatures;
 import com.likelion.medicast.prediction.model.PredictionProviderException;
 import com.likelion.medicast.prediction.model.PredictionResult;
 import com.likelion.medicast.prediction.repository.PredictionRepository;
@@ -22,22 +25,24 @@ import java.time.ZoneOffset;
 @RequiredArgsConstructor
 public class PredictionService {
 
-    private final HealthAssessmentRepository healthAssessmentRepository;
+    private final HealthAssessmentService healthAssessmentService;
     private final PredictionRepository predictionRepository;
+    private final ModelFeatureMapper modelFeatureMapper;
     private final MedicalCostPredictor medicalCostPredictor;
     private final Clock predictionClock;
 
     @Transactional
-    public PredictionResponse create(Long userId, Long assessmentId) {
-        HealthAssessment assessment = healthAssessmentRepository.findByIdAndUser_Id(assessmentId, userId)
-                .orElseThrow(ResourceNotFoundException::new);
+    public PredictionResponse create(Long userId, HealthAssessmentInput input) {
+        HealthAssessment assessment = healthAssessmentService.create(userId, input);
         Prediction prediction = predictionRepository.save(new Prediction(assessment));
+        ModelFeatures modelFeatures = modelFeatureMapper.map(assessment);
 
         try {
-            PredictionResult result = medicalCostPredictor.predict(assessment);
+            PredictionResult result = medicalCostPredictor.predict(modelFeatures);
             validate(result);
             prediction.complete(
                     result.predictedAnnualMedicalCost(),
+                    result.highCostProbability(),
                     result.modelVersion(),
                     result.featureSchemaVersion(),
                     result.preprocessingVersion(),
@@ -61,14 +66,29 @@ public class PredictionService {
 
     private void validate(PredictionResult result) {
         if (result == null) {
-            throw new IllegalArgumentException("예측 결과가 없습니다.");
+            throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
         BigDecimal cost = result.predictedAnnualMedicalCost();
         if (cost == null || cost.signum() < 0) {
-            throw new IllegalArgumentException("예측 금액이 유효하지 않습니다.");
+            throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
+        }
+        BigDecimal highCostProbability = result.highCostProbability();
+        if (highCostProbability == null
+                || highCostProbability.compareTo(BigDecimal.ZERO) < 0
+                || highCostProbability.compareTo(BigDecimal.ONE) > 0) {
+            throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
         if (result.modelVersion() == null || result.modelVersion().isBlank()) {
-            throw new IllegalArgumentException("모델 버전이 없습니다.");
+            throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
+        }
+        if (result.featureSchemaVersion() == null || result.featureSchemaVersion().isBlank()) {
+            throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
+        }
+        if (!ModelFeatureMapper.FEATURE_SCHEMA_VERSION.equals(result.featureSchemaVersion())) {
+            throw new PredictionProviderException("MODEL_SCHEMA_MISMATCH", false);
+        }
+        if (result.preprocessingVersion() == null || result.preprocessingVersion().isBlank()) {
+            throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
     }
 

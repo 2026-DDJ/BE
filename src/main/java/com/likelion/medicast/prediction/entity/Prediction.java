@@ -37,6 +37,9 @@ public class Prediction {
     @Column(name = "predicted_medical_cost", precision = 15, scale = 2)
     private BigDecimal predictedMedicalCost;
 
+    @Column(name = "high_cost_probability", precision = 8, scale = 7)
+    private BigDecimal highCostProbability;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PredictionStatus status;
@@ -72,6 +75,7 @@ public class Prediction {
 
     public void complete(
             BigDecimal predictedMedicalCost,
+            BigDecimal highCostProbability,
             String modelVersion,
             String featureSchemaVersion,
             String preprocessingVersion,
@@ -84,8 +88,14 @@ public class Prediction {
         if (modelVersion == null || modelVersion.isBlank()) {
             throw new IllegalArgumentException("모델 버전은 필수입니다.");
         }
+        if (highCostProbability == null
+                || highCostProbability.compareTo(BigDecimal.ZERO) < 0
+                || highCostProbability.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalArgumentException("고비용 확률은 0 이상 1 이하여야 합니다.");
+        }
 
         this.predictedMedicalCost = predictedMedicalCost;
+        this.highCostProbability = highCostProbability;
         this.modelVersion = modelVersion;
         this.featureSchemaVersion = featureSchemaVersion;
         this.preprocessingVersion = preprocessingVersion;
@@ -98,6 +108,7 @@ public class Prediction {
     public void fail(String errorCode, boolean retryable, LocalDateTime completedAt) {
         ensurePending();
         this.predictedMedicalCost = null;
+        this.highCostProbability = null;
         this.status = PredictionStatus.FAILED;
         this.errorCode = errorCode;
         this.retryable = retryable;

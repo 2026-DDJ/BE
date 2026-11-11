@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: MEDICAST Predictions API
+  version: 1.0.0
+  description: Notion 15개 입력을 받아 평가를 저장하고 AI 의료비 예측을 생성한다.
+paths:
+  /predictions:
+    post:
+      summary: 평가 입력과 예측 생성
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictionCreateRequest'
+            example:
+              householdSize: 3
+              incomeRange: 2400-4500
+              healthInsuranceType: '1'
+              region: 서울특별시
+              selfRatedHealth: FAIR
+              heightCm: 170
+              weightKg: 65
+              exercises: true
+              outpatientVisitsLastYear: 4
+              dentalVisitsLastYear: 1
+              hasPrivateHealthInsurance: true
+              hospitalizedLastYear: false
+              activityLimitation: NONE
+              anxietyDepression: SOME
+              occupation: '31'
+      responses:
+        '201':
+          description: 평가와 예측이 생성됨. 모델 실패도 FAILED 상태로 기록된다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /predictions/{predictionId}:
+    get:
+      summary: 본인 예측 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: predictionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 예측 상태와 결과
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 존재하지 않거나 다른 사용자의 예측
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ValidationError:
+      description: 누락, 범위 초과 또는 허용되지 않은 enum
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: 유효한 Bearer JWT가 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    PredictionCreateRequest:
+      type: object
+      required:
+        - householdSize
+        - incomeRange
+        - healthInsuranceType
+        - region
+        - selfRatedHealth
+        - heightCm
+        - weightKg
+        - exercises
+        - outpatientVisitsLastYear
+        - dentalVisitsLastYear
+        - hasPrivateHealthInsurance
+        - hospitalizedLastYear
+        - activityLimitation
+        - anxietyDepression
+        - occupation
+      properties:
+        householdSize:
+          type: integer
+          minimum: 1
+          maximum: 10
+        incomeRange:
+          type: string
+          enum: [under-2400, 2400-4500, 4500-7500, over-7500]
+        healthInsuranceType:
+          type: string
+          enum: ['1', '2', '3', '4', '5', '6', '7', none]
+        region:
+          type: string
+          enum: [서울특별시, 부산광역시, 대구광역시, 인천광역시, 광주광역시, 대전광역시, 울산광역시, 세종특별자치시, 경기도, 강원특별자치도, 충청북도, 충청남도, 전북특별자치도, 전라남도, 경상북도, 경상남도, 제주특별자치도]
+        selfRatedHealth:
+          type: string
+          enum: [VERY_GOOD, GOOD, FAIR, POOR, VERY_POOR]
+        heightCm:
+          type: number
+          exclusiveMinimum: 0
+          description: cm. 제품 상한과 소수점 정책은 아직 미확정이다.
+        weightKg:
+          type: number
+          exclusiveMinimum: 0
+          description: kg. 제품 상한과 소수점 정책은 아직 미확정이다.
+        exercises:
+          type: boolean
+        outpatientVisitsLastYear:
+          type: integer
+          minimum: 0
+          description: 기술적 상한은 아직 미확정이다.
+        dentalVisitsLastYear:
+          type: integer
+          minimum: 0
+          description: 기술적 상한은 아직 미확정이다.
+        hasPrivateHealthInsurance:
+          type: boolean
+        hospitalizedLastYear:
+          type: boolean
+        activityLimitation:
+          type: string
+          enum: [NONE, SOME, SEVERE]
+        anxietyDepression:
+          type: string
+          enum: [NONE, SOME, SEVERE]
+        occupation:
+          type: string
+          enum: ['14', '24', '31', '42', '52', '61', '78', '87', '94', none]
+    PredictionResponse:
+      type: object
+      required: [id, assessmentId, status, currency, retryable, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        assessmentId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED]
+        predictedAnnualMedicalCost:
+          type: [number, 'null']
+        highCostProbability:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+        currency:
+          type: string
+          const: KRW
+        modelVersion:
+          type: [string, 'null']
+        errorCode:
+          type: [string, 'null']
+        retryable:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: [string, 'null']
+          format: date-time
+    ErrorResponse:
+      type: object
+      required: [status, code, message, timestamp]
+      properties:
+        status:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
