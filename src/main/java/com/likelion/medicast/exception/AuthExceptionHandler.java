@@ -19,6 +19,11 @@ public class AuthExceptionHandler {
         return response(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", exception.getMessage());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException exception) {
+        return response(HttpStatus.NOT_FOUND, "NOT_FOUND", exception.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getFieldErrors().stream()

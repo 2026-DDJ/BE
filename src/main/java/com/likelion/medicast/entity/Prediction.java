@@ -40,8 +40,23 @@ public class Prediction {
     @Column(nullable = false, length = 20)
     private PredictionStatus status;
 
-    @Column(name = "error_message", length = 1000)
-    private String errorMessage;
+    @Column(name = "model_version", length = 100)
+    private String modelVersion;
+
+    @Column(name = "feature_schema_version", length = 100)
+    private String featureSchemaVersion;
+
+    @Column(name = "preprocessing_version", length = 100)
+    private String preprocessingVersion;
+
+    @Column(name = "error_code", length = 50)
+    private String errorCode;
+
+    @Column(nullable = false)
+    private boolean retryable;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -54,15 +69,43 @@ public class Prediction {
         this.status = PredictionStatus.PENDING;
     }
 
-    public void complete(BigDecimal predictedMedicalCost) {
+    public void complete(
+            BigDecimal predictedMedicalCost,
+            String modelVersion,
+            String featureSchemaVersion,
+            String preprocessingVersion,
+            LocalDateTime completedAt
+    ) {
+        ensurePending();
+        if (predictedMedicalCost == null || predictedMedicalCost.signum() < 0) {
+            throw new IllegalArgumentException("예측 금액은 0 이상이어야 합니다.");
+        }
+        if (modelVersion == null || modelVersion.isBlank()) {
+            throw new IllegalArgumentException("모델 버전은 필수입니다.");
+        }
+
         this.predictedMedicalCost = predictedMedicalCost;
+        this.modelVersion = modelVersion;
+        this.featureSchemaVersion = featureSchemaVersion;
+        this.preprocessingVersion = preprocessingVersion;
         this.status = PredictionStatus.COMPLETED;
-        this.errorMessage = null;
+        this.errorCode = null;
+        this.retryable = false;
+        this.completedAt = completedAt;
     }
 
-    public void fail(String errorMessage) {
+    public void fail(String errorCode, boolean retryable, LocalDateTime completedAt) {
+        ensurePending();
         this.predictedMedicalCost = null;
         this.status = PredictionStatus.FAILED;
-        this.errorMessage = errorMessage;
+        this.errorCode = errorCode;
+        this.retryable = retryable;
+        this.completedAt = completedAt;
+    }
+
+    private void ensurePending() {
+        if (status != PredictionStatus.PENDING) {
+            throw new IllegalStateException("대기 중인 예측만 완료하거나 실패 처리할 수 있습니다.");
+        }
     }
 }
