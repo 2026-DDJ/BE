@@ -1,6 +1,6 @@
 package com.likelion.medicast.prediction.model;
 
-import com.likelion.medicast.entity.HealthAssessment;
+import com.likelion.medicast.assessment.entity.HealthAssessment;
 
 public interface MedicalCostPredictor {
 
