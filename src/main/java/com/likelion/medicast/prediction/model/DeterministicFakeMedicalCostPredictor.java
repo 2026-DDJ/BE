@@ -16,6 +16,8 @@ public class DeterministicFakeMedicalCostPredictor implements MedicalCostPredict
     public PredictionResult predict(ModelFeatures features) {
         BigDecimal cost = BASE_COST
                 .add(features.weight().multiply(new BigDecimal("4000")))
+                .add(BigDecimal.valueOf(features.exercise() - 1L)
+                        .multiply(new BigDecimal("30000")))
                 .add(BigDecimal.valueOf(features.ougun())
                         .multiply(new BigDecimal("25000")))
                 .add(BigDecimal.valueOf(features.hospitalizedYear())

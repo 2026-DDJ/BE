@@ -21,4 +21,24 @@ public record ModelFeatures(
         @JsonProperty("anxiety_depression") Integer anxietyDepression,
         @JsonProperty("eco9") Integer eco9
 ) {
+
+    public ModelFeatures withBodyConditions(BigDecimal simulatedWeight, boolean simulatedExercises) {
+        return new ModelFeatures(
+                ingun,
+                income,
+                healthInsurance,
+                region1,
+                selfRatedHealth,
+                height,
+                simulatedWeight,
+                simulatedExercises ? 1 : 2,
+                ougun,
+                ougunDent,
+                indemnityInsurance,
+                hospitalizedYear,
+                activityLimitation,
+                anxietyDepression,
+                eco9
+        );
+    }
 }

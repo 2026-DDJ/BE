@@ -69,6 +69,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /predictions/{predictionId}/simulations:
+    post:
+      summary: BMI·운동 조건별 의료비 비교
+      description: 기존 예측의 다른 입력은 유지하고 BMI와 운동 여부만 바꿔 AI를 다시 호출한다. 결과는 저장하지 않는다.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: predictionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRequest'
+            example:
+              bmi: 20.0
+              exercises: true
+      responses:
+        '200':
+          description: 변경 전·후 예측 비교
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 존재하지 않거나 다른 사용자의 예측
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 기준 예측이 완료 상태가 아님
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: AI 모델이 요청을 거부했거나 잘못된 응답을 반환함
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: AI 모델 timeout 또는 일시적 장애
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -189,6 +246,50 @@ components:
         completedAt:
           type: [string, 'null']
           format: date-time
+    SimulationRequest:
+      type: object
+      required: [bmi, exercises]
+      properties:
+        bmi:
+          type: number
+          minimum: 15
+          maximum: 40
+        exercises:
+          type: boolean
+    SimulationCondition:
+      type: object
+      required: [bmi, exercises, predictedAnnualMedicalCost, highCostProbability]
+      properties:
+        bmi:
+          type: number
+        exercises:
+          type: boolean
+        predictedAnnualMedicalCost:
+          type: number
+          minimum: 0
+        highCostProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+    SimulationResponse:
+      type: object
+      required: [predictionId, before, after, annualMedicalCostDifference, currency, modelVersion]
+      properties:
+        predictionId:
+          type: integer
+          format: int64
+        before:
+          $ref: '#/components/schemas/SimulationCondition'
+        after:
+          $ref: '#/components/schemas/SimulationCondition'
+        annualMedicalCostDifference:
+          type: number
+          description: 변경 후 - 변경 전 금액
+        currency:
+          type: string
+          const: KRW
+        modelVersion:
+          type: string
     ErrorResponse:
       type: object
       required: [status, code, message, timestamp]

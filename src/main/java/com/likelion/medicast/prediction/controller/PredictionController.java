@@ -5,7 +5,10 @@ import com.likelion.medicast.auth.security.AuthenticatedUser;
 import com.likelion.medicast.global.config.OpenApiConfig;
 import com.likelion.medicast.global.exception.ErrorResponse;
 import com.likelion.medicast.prediction.dto.PredictionResponse;
+import com.likelion.medicast.prediction.dto.SimulationRequest;
+import com.likelion.medicast.prediction.dto.SimulationResponse;
 import com.likelion.medicast.prediction.service.PredictionService;
+import com.likelion.medicast.prediction.service.PredictionSimulationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PredictionController {
 
     private final PredictionService predictionService;
+    private final PredictionSimulationService predictionSimulationService;
 
     @PostMapping("/predictions")
     @Operation(
@@ -91,5 +95,53 @@ public class PredictionController {
             @Parameter(description = "예측 ID", example = "1") @PathVariable Long predictionId
     ) {
         return predictionService.get(user.id(), predictionId);
+    }
+
+    @PostMapping("/predictions/{predictionId}/simulations")
+    @Operation(
+            operationId = "simulatePrediction",
+            summary = "BMI·운동 조건별 의료비 비교",
+            description = "기존 예측의 다른 조건은 유지하고 BMI와 규칙적 운동 여부만 바꿔 AI 모델을 다시 호출합니다. "
+                    + "목표 BMI는 기존 키를 기준으로 몸무게로 환산되며 시뮬레이션 결과는 저장하지 않습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "변경 전·후 의료비 비교 성공"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "BMI 범위 또는 요청 형식 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보 누락 또는 유효하지 않은 JWT",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "예측이 없거나 인증 사용자가 소유하지 않음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "기준 예측이 완료 상태가 아님",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "502",
+                    description = "AI 모델의 요청 거부 또는 잘못된 응답",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "AI 모델 timeout 또는 일시적 장애",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public SimulationResponse simulate(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "비교 기준 예측 ID", example = "1") @PathVariable Long predictionId,
+            @Valid @RequestBody SimulationRequest request
+    ) {
+        return predictionSimulationService.simulate(user.id(), predictionId, request);
     }
 }
