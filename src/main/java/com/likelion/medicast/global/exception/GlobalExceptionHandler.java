@@ -2,6 +2,8 @@ package com.likelion.medicast.global.exception;
 
 import com.likelion.medicast.auth.exception.DuplicateEmailException;
 import com.likelion.medicast.auth.exception.InvalidCredentialsException;
+import com.likelion.medicast.prediction.exception.PredictionNotCompletedException;
+import com.likelion.medicast.prediction.model.PredictionProviderException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -30,6 +32,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException exception) {
         return response(HttpStatus.NOT_FOUND, "NOT_FOUND", exception.getMessage());
+    }
+
+    @ExceptionHandler(PredictionNotCompletedException.class)
+    public ResponseEntity<ErrorResponse> handlePredictionNotCompleted(PredictionNotCompletedException exception) {
+        return response(HttpStatus.CONFLICT, "PREDICTION_NOT_COMPLETED", exception.getMessage());
+    }
+
+    @ExceptionHandler(PredictionProviderException.class)
+    public ResponseEntity<ErrorResponse> handlePredictionProvider(PredictionProviderException exception) {
+        HttpStatus status = exception.isRetryable()
+                ? HttpStatus.SERVICE_UNAVAILABLE
+                : HttpStatus.BAD_GATEWAY;
+        return response(status, exception.getCode(), "AI 예측 서버를 사용할 수 없습니다.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

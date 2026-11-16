@@ -7,7 +7,9 @@
 
 15개 사용자 입력은 백엔드에서 검증·저장한 뒤 아래 모델 키와 숫자 코드로 변환한다.
 `health_ins`의 미가입과 `eco9`의 비경제활동은 유효한 `null` 값이다. BMI는 평가 재현을 위해
-백엔드에 저장하지만 현재 AI 서버 요청에는 포함하지 않는다.
+백엔드에 저장하지만 현재 AI 서버 요청에는 직접 포함하지 않는다. BMI 시뮬레이션에서는 기존 키를
+유지한 채 `목표 BMI × 키(cm)^2 ÷ 10000`으로 몸무게를 역산하여 `weight`를 바꾸고,
+운동 여부는 규칙적으로 함 `1`, 안 함 `2`로 `exercise`에 전달한다.
 
 ```json
 {
@@ -35,10 +37,14 @@
 ```json
 {
   "success": true,
-  "predictedAnnualMedicalCost": 1234567.89,
-  "highCostProbability": 0.4321
+  "predictedAnnualMedicalCost": 1114802,
+  "highCostProbability": 0.0934
 }
 ```
+
+위 정상 응답 예시는 2026-11-16에 배포 서버의 문서와 실제 `/predict` 호출로 확인했다.
+OpenAPI상 `ingun`, `income`, `height`, `weight`, `ougun`, `ougun_dent`는 number이고,
+`health_ins`, `activity_limitation`, `anxiety_depression`, `eco9`는 null을 허용한다.
 
 오류 매핑은 다음과 같다.
 

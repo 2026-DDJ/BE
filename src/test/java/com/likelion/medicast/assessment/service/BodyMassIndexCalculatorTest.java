@@ -15,4 +15,10 @@ class BodyMassIndexCalculatorTest {
         assertThat(calculator.calculate(new BigDecimal("170"), new BigDecimal("65")))
                 .isEqualByComparingTo("22.4913");
     }
+
+    @Test
+    void calculatesWeightForTargetBmiAtFourDecimalPlaces() {
+        assertThat(calculator.weightForBmi(new BigDecimal("170"), new BigDecimal("20")))
+                .isEqualByComparingTo("57.8000");
+    }
 }

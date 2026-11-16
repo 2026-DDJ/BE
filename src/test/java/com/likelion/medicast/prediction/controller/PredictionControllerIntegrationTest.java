@@ -129,6 +129,56 @@ class PredictionControllerIntegrationTest {
     }
 
     @Test
+    void simulatesMedicalCostByChangingBmiAndExercise() throws Exception {
+        String token = jwtTokenProvider.createAccessToken(owner.getId());
+        String predictionResponse = mockMvc.perform(post("/predictions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validPayload())))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        long predictionId = ((Number) com.jayway.jsonpath.JsonPath.read(
+                predictionResponse,
+                "$.id"
+        )).longValue();
+
+        Map<String, Object> simulation = new LinkedHashMap<>();
+        simulation.put("bmi", new BigDecimal("20"));
+        simulation.put("exercises", false);
+
+        mockMvc.perform(post("/predictions/{predictionId}/simulations", predictionId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(simulation)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.predictionId").value(predictionId))
+                .andExpect(jsonPath("$.before.bmi").value(22.4913))
+                .andExpect(jsonPath("$.before.exercises").value(true))
+                .andExpect(jsonPath("$.before.predictedAnnualMedicalCost").value(1020000.00))
+                .andExpect(jsonPath("$.after.bmi").value(20))
+                .andExpect(jsonPath("$.after.exercises").value(false))
+                .andExpect(jsonPath("$.after.predictedAnnualMedicalCost").value(1021200.00))
+                .andExpect(jsonPath("$.annualMedicalCostDifference").value(1200.00))
+                .andExpect(jsonPath("$.currency").value("KRW"));
+    }
+
+    @Test
+    void rejectsOutOfRangeSimulationBmi() throws Exception {
+        String token = jwtTokenProvider.createAccessToken(owner.getId());
+
+        mockMvc.perform(post("/predictions/{predictionId}/simulations", 1)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"bmi": 14.9, "exercises": true}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     void rejectsEveryMissingInput() throws Exception {
         String token = jwtTokenProvider.createAccessToken(owner.getId());
 
