@@ -1,6 +1,7 @@
 package com.likelion.medicast.prediction.model;
 
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -32,6 +33,7 @@ public class HttpMedicalCostPredictor implements MedicalCostPredictor {
         try {
             AiModelResponse response = restClient.post()
                     .uri(predictionPath)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(features)
                     .retrieve()
                     .body(AiModelResponse.class);
