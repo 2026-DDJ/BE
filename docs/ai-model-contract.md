@@ -1,7 +1,9 @@
 # AI 모델 서버 계약 v1
 
 백엔드는 운영 프로필에서 `AI_MODEL_BASE_URL`의 `AI_MODEL_PREDICTION_PATH`로 동기 `POST` 요청을
-보낸다. 기본 경로는 `/predict`이며 연결 제한은 2초, 응답 제한은 10초다.
+보낸다. 기본 서버는 `https://medicast-ai-0yh8.onrender.com`, 기본 경로는 `/predict`이며
+연결 제한은 2초, 응답 제한은 30초다. API 문서는
+`https://medicast-ai-0yh8.onrender.com/docs`에서 확인한다.
 
 15개 사용자 입력은 백엔드에서 검증·저장한 뒤 아래 모델 키와 숫자 코드로 변환한다.
 `health_ins`의 미가입과 `eco9`의 비경제활동은 유효한 `null` 값이다. BMI는 평가 재현을 위해
