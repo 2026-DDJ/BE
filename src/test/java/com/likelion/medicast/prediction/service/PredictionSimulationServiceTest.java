@@ -1,28 +1,22 @@
 package com.likelion.medicast.prediction.service;
 
-import com.likelion.medicast.assessment.entity.HealthAssessment;
 import com.likelion.medicast.assessment.service.BodyMassIndexCalculator;
 import com.likelion.medicast.prediction.dto.SimulationRequest;
 import com.likelion.medicast.prediction.dto.SimulationResponse;
-import com.likelion.medicast.prediction.entity.Prediction;
-import com.likelion.medicast.prediction.entity.PredictionStatus;
-import com.likelion.medicast.prediction.exception.PredictionNotCompletedException;
 import com.likelion.medicast.prediction.model.MedicalCostPredictor;
 import com.likelion.medicast.prediction.model.ModelFeatureMapper;
 import com.likelion.medicast.prediction.model.ModelFeatures;
 import com.likelion.medicast.prediction.model.PredictionResult;
-import com.likelion.medicast.prediction.repository.PredictionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,34 +24,23 @@ import static org.mockito.Mockito.when;
 class PredictionSimulationServiceTest {
 
     @Mock
-    private PredictionRepository predictionRepository;
-
-    @Mock
-    private ModelFeatureMapper modelFeatureMapper;
+    private PredictionSimulationSnapshotLoader snapshotLoader;
 
     @Mock
     private MedicalCostPredictor medicalCostPredictor;
 
-    @Mock
-    private Prediction prediction;
-
-    @Mock
-    private HealthAssessment assessment;
-
     @Test
     void changesOnlyWeightDerivedFromBmiAndExercise() {
         ModelFeatures originalFeatures = features(new BigDecimal("65"), 1);
-        when(predictionRepository.findByIdAndAssessment_User_Id(7L, 1L))
-                .thenReturn(Optional.of(prediction));
-        when(prediction.getStatus()).thenReturn(PredictionStatus.COMPLETED);
-        when(prediction.getId()).thenReturn(7L);
-        when(prediction.getAssessment()).thenReturn(assessment);
-        when(prediction.getPredictedMedicalCost()).thenReturn(new BigDecimal("1000000"));
-        when(prediction.getHighCostProbability()).thenReturn(new BigDecimal("0.20"));
-        when(assessment.getHeightCm()).thenReturn(new BigDecimal("170"));
-        when(assessment.getBmi()).thenReturn(new BigDecimal("22.4913"));
-        when(assessment.isExercises()).thenReturn(true);
-        when(modelFeatureMapper.map(assessment)).thenReturn(originalFeatures);
+        when(snapshotLoader.load(1L, 7L)).thenReturn(new PredictionSimulationSnapshot(
+                7L,
+                new BigDecimal("170"),
+                new BigDecimal("22.4913"),
+                true,
+                new BigDecimal("1000000"),
+                new BigDecimal("0.20"),
+                originalFeatures
+        ));
         when(medicalCostPredictor.predict(org.mockito.ArgumentMatchers.any(ModelFeatures.class)))
                 .thenReturn(new PredictionResult(
                         new BigDecimal("900000"),
@@ -68,8 +51,7 @@ class PredictionSimulationServiceTest {
                 ));
 
         PredictionSimulationService service = new PredictionSimulationService(
-                predictionRepository,
-                modelFeatureMapper,
+                snapshotLoader,
                 medicalCostPredictor,
                 new BodyMassIndexCalculator()
         );
@@ -94,23 +76,12 @@ class PredictionSimulationServiceTest {
     }
 
     @Test
-    void rejectsSimulationWhenOriginalPredictionFailed() {
-        when(predictionRepository.findByIdAndAssessment_User_Id(7L, 1L))
-                .thenReturn(Optional.of(prediction));
-        when(prediction.getStatus()).thenReturn(PredictionStatus.FAILED);
+    void doesNotWrapAiCallInServiceTransaction() throws NoSuchMethodException {
+        boolean transactional = PredictionSimulationService.class
+                .getMethod("simulate", Long.class, Long.class, SimulationRequest.class)
+                .isAnnotationPresent(Transactional.class);
 
-        PredictionSimulationService service = new PredictionSimulationService(
-                predictionRepository,
-                modelFeatureMapper,
-                medicalCostPredictor,
-                new BodyMassIndexCalculator()
-        );
-
-        assertThatThrownBy(() -> service.simulate(
-                1L,
-                7L,
-                new SimulationRequest(new BigDecimal("20"), false)
-        )).isInstanceOf(PredictionNotCompletedException.class);
+        assertThat(transactional).isFalse();
     }
 
     private ModelFeatures features(BigDecimal weight, int exercise) {

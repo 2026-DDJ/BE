@@ -1,23 +1,16 @@
 package com.likelion.medicast.prediction.service;
 
-import com.likelion.medicast.assessment.entity.HealthAssessment;
 import com.likelion.medicast.assessment.service.BodyMassIndexCalculator;
-import com.likelion.medicast.global.exception.ResourceNotFoundException;
 import com.likelion.medicast.prediction.dto.SimulationConditionResponse;
 import com.likelion.medicast.prediction.dto.SimulationRequest;
 import com.likelion.medicast.prediction.dto.SimulationResponse;
-import com.likelion.medicast.prediction.entity.Prediction;
-import com.likelion.medicast.prediction.entity.PredictionStatus;
-import com.likelion.medicast.prediction.exception.PredictionNotCompletedException;
 import com.likelion.medicast.prediction.model.MedicalCostPredictor;
 import com.likelion.medicast.prediction.model.ModelFeatureMapper;
 import com.likelion.medicast.prediction.model.ModelFeatures;
 import com.likelion.medicast.prediction.model.PredictionProviderException;
 import com.likelion.medicast.prediction.model.PredictionResult;
-import com.likelion.medicast.prediction.repository.PredictionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -27,32 +20,26 @@ public class PredictionSimulationService {
 
     private static final String CURRENCY = "KRW";
 
-    private final PredictionRepository predictionRepository;
-    private final ModelFeatureMapper modelFeatureMapper;
+    private final PredictionSimulationSnapshotLoader snapshotLoader;
     private final MedicalCostPredictor medicalCostPredictor;
     private final BodyMassIndexCalculator bodyMassIndexCalculator;
 
-    @Transactional(readOnly = true)
     public SimulationResponse simulate(Long userId, Long predictionId, SimulationRequest request) {
-        Prediction prediction = predictionRepository.findByIdAndAssessment_User_Id(predictionId, userId)
-                .orElseThrow(ResourceNotFoundException::new);
-        ensureCompleted(prediction);
-
-        HealthAssessment assessment = prediction.getAssessment();
+        PredictionSimulationSnapshot snapshot = snapshotLoader.load(userId, predictionId);
         BigDecimal simulatedWeight = bodyMassIndexCalculator.weightForBmi(
-                assessment.getHeightCm(),
+                snapshot.heightCm(),
                 request.bmi()
         );
-        ModelFeatures simulatedFeatures = modelFeatureMapper.map(assessment)
+        ModelFeatures simulatedFeatures = snapshot.modelFeatures()
                 .withBodyConditions(simulatedWeight, request.exercises());
         PredictionResult simulatedResult = medicalCostPredictor.predict(simulatedFeatures);
         validate(simulatedResult);
 
         SimulationConditionResponse before = new SimulationConditionResponse(
-                assessment.getBmi(),
-                assessment.isExercises(),
-                prediction.getPredictedMedicalCost(),
-                prediction.getHighCostProbability()
+                snapshot.bmi(),
+                snapshot.exercises(),
+                snapshot.predictedMedicalCost(),
+                snapshot.highCostProbability()
         );
         SimulationConditionResponse after = new SimulationConditionResponse(
                 request.bmi(),
@@ -62,21 +49,13 @@ public class PredictionSimulationService {
         );
 
         return new SimulationResponse(
-                prediction.getId(),
+                snapshot.predictionId(),
                 before,
                 after,
-                simulatedResult.predictedAnnualMedicalCost().subtract(prediction.getPredictedMedicalCost()),
+                simulatedResult.predictedAnnualMedicalCost().subtract(snapshot.predictedMedicalCost()),
                 CURRENCY,
                 simulatedResult.modelVersion()
         );
-    }
-
-    private void ensureCompleted(Prediction prediction) {
-        if (prediction.getStatus() != PredictionStatus.COMPLETED
-                || prediction.getPredictedMedicalCost() == null
-                || prediction.getHighCostProbability() == null) {
-            throw new PredictionNotCompletedException();
-        }
     }
 
     private void validate(PredictionResult result) {
