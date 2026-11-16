@@ -32,8 +32,11 @@ public class SecurityConfig {
     private final RestAccessDeniedHandler accessDeniedHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            @Value("${app.auth.enabled:true}") boolean authEnabled
+    ) throws Exception {
+        http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -42,18 +45,25 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/auth/signup", "/auth/login").permitAll()
-                        .requestMatchers(
-                                "/error",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**"
-                        ).permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                        .accessDeniedHandler(accessDeniedHandler));
+
+        if (authEnabled) {
+            http.authorizeHttpRequests(authorize -> authorize
+                            .requestMatchers(HttpMethod.POST, "/auth/signup", "/auth/login").permitAll()
+                            .requestMatchers(
+                                    "/error",
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui.html",
+                                    "/swagger-ui/**"
+                            ).permitAll()
+                            .anyRequest().authenticated())
+                    .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        } else {
+            http.authorizeHttpRequests(authorize -> authorize
+                    .anyRequest().permitAll());
+        }
+
+        return http.build();
     }
 
     @Bean

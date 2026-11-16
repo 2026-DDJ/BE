@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -27,4 +30,21 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     public static final String BEARER_AUTH = "bearerAuth";
+
+    @Bean
+    public OpenApiCustomizer authenticationModeOpenApiCustomizer(
+            @Value("${app.auth.enabled:true}") boolean authEnabled
+    ) {
+        return openApi -> {
+            if (authEnabled) {
+                return;
+            }
+            openApi.getPaths().values().forEach(pathItem ->
+                    pathItem.readOperations().forEach(operation -> operation.setSecurity(null))
+            );
+            if (openApi.getComponents() != null && openApi.getComponents().getSecuritySchemes() != null) {
+                openApi.getComponents().getSecuritySchemes().remove(BEARER_AUTH);
+            }
+        };
+    }
 }

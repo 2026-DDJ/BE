@@ -2,6 +2,7 @@ package com.likelion.medicast.prediction.controller;
 
 import com.likelion.medicast.assessment.dto.HealthAssessmentInput;
 import com.likelion.medicast.auth.security.AuthenticatedUser;
+import com.likelion.medicast.auth.security.RequestUserIdResolver;
 import com.likelion.medicast.global.config.OpenApiConfig;
 import com.likelion.medicast.global.exception.ErrorResponse;
 import com.likelion.medicast.prediction.dto.PredictionResponse;
@@ -36,6 +37,7 @@ public class PredictionController {
 
     private final PredictionService predictionService;
     private final PredictionSimulationService predictionSimulationService;
+    private final RequestUserIdResolver requestUserIdResolver;
 
     @PostMapping("/predictions")
     @Operation(
@@ -62,7 +64,7 @@ public class PredictionController {
             @Valid @RequestBody HealthAssessmentInput input
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(predictionService.create(user.id(), input));
+                .body(predictionService.create(requestUserIdResolver.resolve(user), input));
     }
 
     @GetMapping("/predictions/{predictionId}")
@@ -94,7 +96,7 @@ public class PredictionController {
             @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
             @Parameter(description = "예측 ID", example = "1") @PathVariable Long predictionId
     ) {
-        return predictionService.get(user.id(), predictionId);
+        return predictionService.get(requestUserIdResolver.resolve(user), predictionId);
     }
 
     @PostMapping("/predictions/{predictionId}/simulations")
@@ -142,6 +144,10 @@ public class PredictionController {
             @Parameter(description = "비교 기준 예측 ID", example = "1") @PathVariable Long predictionId,
             @Valid @RequestBody SimulationRequest request
     ) {
-        return predictionSimulationService.simulate(user.id(), predictionId, request);
+        return predictionSimulationService.simulate(
+                requestUserIdResolver.resolve(user),
+                predictionId,
+                request
+        );
     }
 }
