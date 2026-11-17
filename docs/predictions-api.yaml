@@ -231,6 +231,18 @@ components:
           type: [number, 'null']
           minimum: 0
           maximum: 1
+        sameAgeGenderAverageAnnualMedicalCost:
+          description: 동일 연령대·성별 집단의 평균 연간 의료비. 비교 통계가 없으면 null이다.
+          type: [number, 'null']
+          minimum: 0
+        sameIncomeRegionAverageAnnualMedicalCost:
+          description: 동일 소득 구간·지역 집단의 평균 연간 의료비. 비교 통계가 없으면 null이다.
+          type: [number, 'null']
+          minimum: 0
+        overallAverageAnnualMedicalCost:
+          description: 전체 집단의 평균 연간 의료비. 비교 통계가 없으면 null이다.
+          type: [number, 'null']
+          minimum: 0
         currency:
           type: string
           const: KRW

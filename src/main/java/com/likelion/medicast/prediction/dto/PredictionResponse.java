@@ -41,6 +41,33 @@ public record PredictionResponse(
         )
         BigDecimal highCostProbability,
 
+        @Schema(
+                description = "동일 연령대·성별 집단의 평균 연간 의료비. 비교 통계가 없으면 null입니다.",
+                example = "2310000.00",
+                minimum = "0",
+                nullable = true,
+                readOnly = true
+        )
+        BigDecimal sameAgeGenderAverageAnnualMedicalCost,
+
+        @Schema(
+                description = "동일 소득 구간·지역 집단의 평균 연간 의료비. 비교 통계가 없으면 null입니다.",
+                example = "2250000.00",
+                minimum = "0",
+                nullable = true,
+                readOnly = true
+        )
+        BigDecimal sameIncomeRegionAverageAnnualMedicalCost,
+
+        @Schema(
+                description = "전체 집단의 평균 연간 의료비. 비교 통계가 없으면 null입니다.",
+                example = "2180000.00",
+                minimum = "0",
+                nullable = true,
+                readOnly = true
+        )
+        BigDecimal overallAverageAnnualMedicalCost,
+
         @Schema(description = "예측 금액 통화", example = "KRW", allowableValues = "KRW", readOnly = true)
         String currency,
 
@@ -69,6 +96,9 @@ public record PredictionResponse(
                 prediction.getStatus(),
                 prediction.getPredictedMedicalCost(),
                 prediction.getHighCostProbability(),
+                null,
+                null,
+                null,
                 CURRENCY,
                 prediction.getModelVersion(),
                 prediction.getErrorCode(),
