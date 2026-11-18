@@ -52,7 +52,10 @@ public class HttpMedicalCostPredictor implements MedicalCostPredictor {
                     response.highCostProbability(),
                     modelVersion,
                     ModelFeatureMapper.FEATURE_SCHEMA_VERSION,
-                    preprocessingVersion
+                    preprocessingVersion,
+                    mean(response.comparison() == null ? null : response.comparison().sameIncomeGroup()),
+                    mean(response.comparison() == null ? null : response.comparison().sameOutpatientGroup()),
+                    mean(response.comparison() == null ? null : response.comparison().overall())
             );
         } catch (PredictionProviderException exception) {
             log.warn(
@@ -90,10 +93,20 @@ public class HttpMedicalCostPredictor implements MedicalCostPredictor {
         return new PredictionProviderException("MODEL_UNAVAILABLE", true);
     }
 
+    private static BigDecimal mean(ComparisonGroup group) {
+        return group == null ? null : group.mean();
+    }
+
+    private record ComparisonGroup(BigDecimal mean) {}
+
+    private record ComparisonData(ComparisonGroup overall,
+            ComparisonGroup sameIncomeGroup, ComparisonGroup sameOutpatientGroup) {}
+
     private record AiModelResponse(
             boolean success,
             BigDecimal predictedAnnualMedicalCost,
-            BigDecimal highCostProbability
+            BigDecimal highCostProbability,
+            ComparisonData comparison
     ) {
     }
 }
