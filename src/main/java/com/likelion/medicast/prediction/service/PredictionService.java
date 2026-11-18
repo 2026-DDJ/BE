@@ -48,6 +48,11 @@ public class PredictionService {
                     result.preprocessingVersion(),
                     now()
             );
+            prediction.setComparisonAverages(
+                    validComparisonCost(result.sameIncomeGroupAverageAnnualMedicalCost()),
+                    validComparisonCost(result.sameOutpatientVisitsGroupAverageAnnualMedicalCost()),
+                    validComparisonCost(result.overallAverageAnnualMedicalCost())
+            );
         } catch (PredictionProviderException exception) {
             prediction.fail(exception.getCode(), exception.isRetryable(), now());
         } catch (RuntimeException exception) {
@@ -62,6 +67,10 @@ public class PredictionService {
         Prediction prediction = predictionRepository.findByIdAndAssessment_User_Id(predictionId, userId)
                 .orElseThrow(ResourceNotFoundException::new);
         return PredictionResponse.from(prediction);
+    }
+
+    private BigDecimal validComparisonCost(BigDecimal value) {
+        return value != null && value.signum() >= 0 ? value : null;
     }
 
     private void validate(PredictionResult result) {
