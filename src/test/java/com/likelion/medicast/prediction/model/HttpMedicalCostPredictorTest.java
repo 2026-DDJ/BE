@@ -72,7 +72,12 @@ class HttpMedicalCostPredictorTest {
                         {
                           "success": true,
                           "predictedAnnualMedicalCost": 1234567.89,
-                          "highCostProbability": 0.4321
+                          "highCostProbability": 0.4321,
+                          "comparison": {
+                            "sameIncomeGroup": {"count": 100, "mean": 1501650, "median": 769100},
+                            "sameOutpatientGroup": {"count": 150, "mean": 1200000, "median": 600000},
+                            "overall": {"count": 11770, "mean": 1391111, "median": 687550}
+                          }
                         }
                         """, MediaType.APPLICATION_JSON));
 
@@ -80,6 +85,9 @@ class HttpMedicalCostPredictorTest {
 
         assertThat(result.predictedAnnualMedicalCost()).isEqualByComparingTo("1234567.89");
         assertThat(result.highCostProbability()).isEqualByComparingTo("0.4321");
+        assertThat(result.sameIncomeGroupAverageAnnualMedicalCost()).isEqualByComparingTo("1501650");
+        assertThat(result.sameOutpatientVisitsGroupAverageAnnualMedicalCost()).isEqualByComparingTo("1200000");
+        assertThat(result.overallAverageAnnualMedicalCost()).isEqualByComparingTo("1391111");
         assertThat(result.modelVersion()).isEqualTo("xgboost-2026-11-11");
         assertThat(result.featureSchemaVersion()).isEqualTo("notion-15-v1");
         assertThat(result.preprocessingVersion()).isEqualTo("khp-2024-v1");
