@@ -30,7 +30,10 @@ public class DeterministicFakeMedicalCostPredictor implements MedicalCostPredict
                 new BigDecimal("0.1500"),
                 "deterministic-fake-v1",
                 ModelFeatureMapper.FEATURE_SCHEMA_VERSION,
-                "notion-15-fake-preprocessing-v1"
+                "notion-15-fake-preprocessing-v1",
+                new BigDecimal("1350252.345"),
+                new BigDecimal("1064948.236"),
+                new BigDecimal("1391111.999")
         );
     }
 }

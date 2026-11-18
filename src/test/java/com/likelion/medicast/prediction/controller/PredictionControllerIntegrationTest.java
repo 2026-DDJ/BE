@@ -101,9 +101,9 @@ class PredictionControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.predictedAnnualMedicalCost").isNumber())
                 .andExpect(jsonPath("$.highCostProbability").value(0.15))
-                .andExpect(jsonPath("$.sameAgeGenderAverageAnnualMedicalCost").isEmpty())
-                .andExpect(jsonPath("$.sameIncomeRegionAverageAnnualMedicalCost").isEmpty())
-                .andExpect(jsonPath("$.overallAverageAnnualMedicalCost").isEmpty())
+                .andExpect(jsonPath("$.sameIncomeGroupAverageAnnualMedicalCost").value(1350252.35))
+                .andExpect(jsonPath("$.sameOutpatientVisitsGroupAverageAnnualMedicalCost").value(1064948.24))
+                .andExpect(jsonPath("$.overallAverageAnnualMedicalCost").value(1391112.00))
                 .andExpect(jsonPath("$.currency").value("KRW"))
                 .andExpect(jsonPath("$.modelVersion").value("deterministic-fake-v1"))
                 .andExpect(jsonPath("$.completedAt").exists())
@@ -128,7 +128,10 @@ class PredictionControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(predictionId))
                 .andExpect(jsonPath("$.assessmentId").value(assessmentId))
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.sameIncomeGroupAverageAnnualMedicalCost").value(1350252.35))
+                .andExpect(jsonPath("$.sameOutpatientVisitsGroupAverageAnnualMedicalCost").value(1064948.24))
+                .andExpect(jsonPath("$.overallAverageAnnualMedicalCost").value(1391112.00));
     }
 
     @Test

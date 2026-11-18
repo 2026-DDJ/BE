@@ -7,6 +7,14 @@ public record PredictionResult(
         BigDecimal highCostProbability,
         String modelVersion,
         String featureSchemaVersion,
-        String preprocessingVersion
+        String preprocessingVersion,
+        BigDecimal sameIncomeGroupAverageAnnualMedicalCost,
+        BigDecimal sameOutpatientVisitsGroupAverageAnnualMedicalCost,
+        BigDecimal overallAverageAnnualMedicalCost
 ) {
+    public PredictionResult(BigDecimal predictedAnnualMedicalCost, BigDecimal highCostProbability,
+            String modelVersion, String featureSchemaVersion, String preprocessingVersion) {
+        this(predictedAnnualMedicalCost, highCostProbability, modelVersion,
+                featureSchemaVersion, preprocessingVersion, null, null, null);
+    }
 }
