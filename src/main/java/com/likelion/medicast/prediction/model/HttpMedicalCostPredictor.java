@@ -1,5 +1,7 @@
 package com.likelion.medicast.prediction.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.ResourceAccessException;
@@ -10,6 +12,8 @@ import org.springframework.web.client.RestClientResponseException;
 import java.math.BigDecimal;
 
 public class HttpMedicalCostPredictor implements MedicalCostPredictor {
+
+    private static final Logger log = LoggerFactory.getLogger(HttpMedicalCostPredictor.class);
 
     private final RestClient restClient;
     private final String predictionPath;
@@ -51,12 +55,30 @@ public class HttpMedicalCostPredictor implements MedicalCostPredictor {
                     preprocessingVersion
             );
         } catch (PredictionProviderException exception) {
+            log.warn(
+                    "AI prediction failed: code={}, path={}",
+                    exception.getCode(),
+                    predictionPath
+            );
             throw exception;
         } catch (RestClientResponseException exception) {
-            throw mapHttpError(exception.getStatusCode());
+            PredictionProviderException mappedException = mapHttpError(exception.getStatusCode());
+            log.warn(
+                    "AI prediction HTTP request failed: code={}, status={}, path={}",
+                    mappedException.getCode(),
+                    exception.getStatusCode().value(),
+                    predictionPath
+            );
+            throw mappedException;
         } catch (ResourceAccessException exception) {
+            log.warn("AI prediction request failed: code=MODEL_TIMEOUT, path={}", predictionPath);
             throw new PredictionProviderException("MODEL_TIMEOUT", true);
         } catch (RestClientException exception) {
+            log.warn(
+                    "AI prediction response failed: code=MODEL_INVALID_RESPONSE, path={}, exceptionType={}",
+                    predictionPath,
+                    exception.getClass().getSimpleName()
+            );
             throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
     }

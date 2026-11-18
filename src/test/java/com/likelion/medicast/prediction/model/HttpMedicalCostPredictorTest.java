@@ -2,7 +2,11 @@ package com.likelion.medicast.prediction.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
@@ -18,10 +22,11 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.http.HttpMethod.POST;
 
+@ExtendWith(OutputCaptureExtension.class)
 class HttpMedicalCostPredictorTest {
 
     private MockRestServiceServer server;
@@ -93,14 +98,23 @@ class HttpMedicalCostPredictorTest {
     }
 
     @Test
-    void mapsModelServerErrorAsRetryable() {
-        server.expect(requestTo("http://model.test/predict")).andRespond(withServerError());
+    void mapsModelServerErrorAsRetryableAndLogsSafeDetails(CapturedOutput output) {
+        server.expect(requestTo("http://model.test/predict"))
+                .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"sensitiveDetail\":\"must-not-be-logged\"}"));
 
         assertThatThrownBy(() -> predictor.predict(request()))
                 .isInstanceOfSatisfying(PredictionProviderException.class, exception -> {
                     assertThat(exception.getCode()).isEqualTo("MODEL_UNAVAILABLE");
                     assertThat(exception.isRetryable()).isTrue();
                 });
+        assertThat(output)
+                .contains("AI prediction HTTP request failed")
+                .contains("code=MODEL_UNAVAILABLE")
+                .contains("status=500")
+                .contains("path=/predict")
+                .doesNotContain("must-not-be-logged");
     }
 
     @Test
