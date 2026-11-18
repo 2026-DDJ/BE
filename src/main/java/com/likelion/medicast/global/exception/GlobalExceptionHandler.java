@@ -4,6 +4,8 @@ import com.likelion.medicast.auth.exception.DuplicateEmailException;
 import com.likelion.medicast.auth.exception.InvalidCredentialsException;
 import com.likelion.medicast.prediction.exception.PredictionNotCompletedException;
 import com.likelion.medicast.prediction.model.PredictionProviderException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +18,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private static final String INVALID_REQUEST_MESSAGE = "요청 값을 확인해 주세요.";
 
@@ -73,6 +77,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception) {
+        log.error("Unhandled server exception", exception);
         return response(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "INTERNAL_SERVER_ERROR",
