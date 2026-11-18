@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -70,7 +71,9 @@ public class PredictionService {
     }
 
     private BigDecimal validComparisonCost(BigDecimal value) {
-        return value != null && value.signum() >= 0 ? value : null;
+        return value != null && value.signum() >= 0
+                ? value.setScale(2, RoundingMode.HALF_UP)
+                : null;
     }
 
     private void validate(PredictionResult result) {
