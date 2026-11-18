@@ -40,6 +40,15 @@ public class Prediction {
     @Column(name = "high_cost_probability", precision = 8, scale = 7)
     private BigDecimal highCostProbability;
 
+    @Column(name = "same_income_group_average_annual_medical_cost", precision = 15, scale = 2)
+    private BigDecimal sameIncomeGroupAverageAnnualMedicalCost;
+
+    @Column(name = "same_outpatient_group_average_annual_medical_cost", precision = 15, scale = 2)
+    private BigDecimal sameOutpatientVisitsGroupAverageAnnualMedicalCost;
+
+    @Column(name = "overall_average_annual_medical_cost", precision = 15, scale = 2)
+    private BigDecimal overallAverageAnnualMedicalCost;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PredictionStatus status;
@@ -103,6 +112,15 @@ public class Prediction {
         this.errorCode = null;
         this.retryable = false;
         this.completedAt = completedAt;
+    }
+
+    public void setComparisonAverages(BigDecimal income, BigDecimal outpatient, BigDecimal overall) {
+        if (status != PredictionStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 예측만 비교 통계를 저장할 수 있습니다.");
+        }
+        this.sameIncomeGroupAverageAnnualMedicalCost = income;
+        this.sameOutpatientVisitsGroupAverageAnnualMedicalCost = outpatient;
+        this.overallAverageAnnualMedicalCost = overall;
     }
 
     public void fail(String errorCode, boolean retryable, LocalDateTime completedAt) {
