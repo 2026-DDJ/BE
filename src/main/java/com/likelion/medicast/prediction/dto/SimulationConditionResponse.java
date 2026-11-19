@@ -12,9 +12,6 @@ public record SimulationConditionResponse(
         boolean exercises,
 
         @Schema(description = "예상 연간 의료비(원)", example = "1250000.00", minimum = "0", readOnly = true)
-        BigDecimal predictedAnnualMedicalCost,
-
-        @Schema(description = "고비용군 확률(0~1)", example = "0.15", minimum = "0", maximum = "1", readOnly = true)
-        BigDecimal highCostProbability
+        BigDecimal predictedAnnualMedicalCost
 ) {
 }

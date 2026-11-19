@@ -31,15 +31,13 @@ public class PredictionSimulationSnapshotLoader {
                 assessment.getBmi(),
                 assessment.isExercises(),
                 prediction.getPredictedMedicalCost(),
-                prediction.getHighCostProbability(),
                 modelFeatureMapper.map(assessment)
         );
     }
 
     private void ensureCompleted(Prediction prediction) {
         if (prediction.getStatus() != PredictionStatus.COMPLETED
-                || prediction.getPredictedMedicalCost() == null
-                || prediction.getHighCostProbability() == null) {
+                || prediction.getPredictedMedicalCost() == null) {
             throw new PredictionNotCompletedException();
         }
     }

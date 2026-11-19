@@ -31,20 +31,31 @@
 }
 ```
 
-정상 응답은 아래 세 필드를 반환해야 한다. 금액이 누락·음수이거나 고비용 확률이 0~1 밖이면
-예측은 `MODEL_INVALID_RESPONSE`로 실패 저장된다. 모델·전처리 버전은 배포 환경변수로 주입한다.
+정상 응답은 개인 예상 의료비와 비교 집단별 평균을 반환해야 한다. 네 금액 중 하나라도
+누락되거나 음수이면 예측은 `MODEL_INVALID_RESPONSE`로 실패 저장된다. 모델·전처리 버전은
+배포 환경변수로 주입한다.
 
 ```json
 {
   "success": true,
   "predictedAnnualMedicalCost": 1114802,
-  "highCostProbability": 0.0934
+  "comparison": {
+    "sameIncomeGroup": {
+      "mean": 1100000
+    },
+    "sameOutpatientGroup": {
+      "mean": 1200000
+    },
+    "overall": {
+      "mean": 1000000
+    }
+  }
 }
 ```
 
-위 정상 응답 예시는 2026-11-16에 배포 서버의 문서와 실제 `/predict` 호출로 확인했다.
-OpenAPI상 `ingun`, `income`, `height`, `weight`, `ougun`, `ougun_dent`는 number이고,
-`health_ins`, `activity_limitation`, `anxiety_depression`, `eco9`는 null을 허용한다.
+`predictedAnnualMedicalCost`는 개인 예상 연간 의료비이며, `comparison.sameIncomeGroup.mean`,
+`comparison.sameOutpatientGroup.mean`, `comparison.overall.mean`은 각각 동일 소득 구간,
+동일 외래 이용 횟수 구간, 전체 표본의 평균 연간 의료비다.
 
 오류 매핑은 다음과 같다.
 

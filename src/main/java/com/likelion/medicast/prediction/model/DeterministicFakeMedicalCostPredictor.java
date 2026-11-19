@@ -27,7 +27,9 @@ public class DeterministicFakeMedicalCostPredictor implements MedicalCostPredict
 
         return new PredictionResult(
                 cost.setScale(2, RoundingMode.HALF_UP),
-                new BigDecimal("0.1500"),
+                new BigDecimal("1100000.00"),
+                new BigDecimal("1200000.00"),
+                new BigDecimal("1000000.00"),
                 "deterministic-fake-v1",
                 ModelFeatureMapper.FEATURE_SCHEMA_VERSION,
                 "notion-15-fake-preprocessing-v1"

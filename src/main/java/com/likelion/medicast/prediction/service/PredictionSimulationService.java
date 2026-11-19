@@ -38,14 +38,12 @@ public class PredictionSimulationService {
         SimulationConditionResponse before = new SimulationConditionResponse(
                 snapshot.bmi(),
                 snapshot.exercises(),
-                snapshot.predictedMedicalCost(),
-                snapshot.highCostProbability()
+                snapshot.predictedMedicalCost()
         );
         SimulationConditionResponse after = new SimulationConditionResponse(
                 request.bmi(),
                 request.exercises(),
-                simulatedResult.predictedAnnualMedicalCost(),
-                simulatedResult.highCostProbability()
+                simulatedResult.predictedAnnualMedicalCost()
         );
 
         return new SimulationResponse(
@@ -62,9 +60,12 @@ public class PredictionSimulationService {
         if (result == null
                 || result.predictedAnnualMedicalCost() == null
                 || result.predictedAnnualMedicalCost().signum() < 0
-                || result.highCostProbability() == null
-                || result.highCostProbability().compareTo(BigDecimal.ZERO) < 0
-                || result.highCostProbability().compareTo(BigDecimal.ONE) > 0
+                || result.sameIncomeGroupMean() == null
+                || result.sameIncomeGroupMean().signum() < 0
+                || result.sameOutpatientGroupMean() == null
+                || result.sameOutpatientGroupMean().signum() < 0
+                || result.overallMean() == null
+                || result.overallMean().signum() < 0
                 || result.modelVersion() == null
                 || result.modelVersion().isBlank()
                 || result.featureSchemaVersion() == null

@@ -23,7 +23,7 @@ public record PredictionResponse(
         PredictionStatus status,
 
         @Schema(
-                description = "예상 연간 의료비. COMPLETED가 아니면 null입니다.",
+                description = "예상 연간 의료비",
                 example = "1250000.00",
                 minimum = "0",
                 nullable = true,
@@ -31,42 +31,14 @@ public record PredictionResponse(
         )
         BigDecimal predictedAnnualMedicalCost,
 
-        @Schema(
-                description = "고비용군 확률(0~1). COMPLETED가 아니면 null입니다.",
-                example = "0.15",
-                minimum = "0",
-                maximum = "1",
-                nullable = true,
-                readOnly = true
-        )
-        BigDecimal highCostProbability,
+        @Schema(description = "동일 소득 구간의 평균 연간 의료비", example = "1100000.00", minimum = "0", nullable = true, readOnly = true)
+        BigDecimal sameIncomeGroupMean,
 
-        @Schema(
-                description = "동일 연령대·성별 집단의 평균 연간 의료비. 비교 통계가 없으면 null입니다.",
-                example = "2310000.00",
-                minimum = "0",
-                nullable = true,
-                readOnly = true
-        )
-        BigDecimal sameAgeGenderAverageAnnualMedicalCost,
+        @Schema(description = "동일 외래 이용 횟수 구간의 평균 연간 의료비", example = "1200000.00", minimum = "0", nullable = true, readOnly = true)
+        BigDecimal sameOutpatientVisitsGroupMean,
 
-        @Schema(
-                description = "동일 소득 구간·지역 집단의 평균 연간 의료비. 비교 통계가 없으면 null입니다.",
-                example = "2250000.00",
-                minimum = "0",
-                nullable = true,
-                readOnly = true
-        )
-        BigDecimal sameIncomeRegionAverageAnnualMedicalCost,
-
-        @Schema(
-                description = "전체 집단의 평균 연간 의료비. 비교 통계가 없으면 null입니다.",
-                example = "2180000.00",
-                minimum = "0",
-                nullable = true,
-                readOnly = true
-        )
-        BigDecimal overallAverageAnnualMedicalCost,
+        @Schema(description = "전체 평균 연간 의료비", example = "1000000.00", minimum = "0", nullable = true, readOnly = true)
+        BigDecimal overallMean,
 
         @Schema(description = "예측 금액 통화", example = "KRW", allowableValues = "KRW", readOnly = true)
         String currency,
@@ -95,10 +67,9 @@ public record PredictionResponse(
                 prediction.getAssessment().getId(),
                 prediction.getStatus(),
                 prediction.getPredictedMedicalCost(),
-                prediction.getHighCostProbability(),
-                null,
-                null,
-                null,
+                prediction.getSameIncomeGroupMean(),
+                prediction.getSameOutpatientGroupMean(),
+                prediction.getOverallMean(),
                 CURRENCY,
                 prediction.getModelVersion(),
                 prediction.getErrorCode(),

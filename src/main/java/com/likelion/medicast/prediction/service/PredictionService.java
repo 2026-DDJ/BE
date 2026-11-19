@@ -42,7 +42,9 @@ public class PredictionService {
             validate(result);
             prediction.complete(
                     result.predictedAnnualMedicalCost(),
-                    result.highCostProbability(),
+                    result.sameIncomeGroupMean(),
+                    result.sameOutpatientGroupMean(),
+                    result.overallMean(),
                     result.modelVersion(),
                     result.featureSchemaVersion(),
                     result.preprocessingVersion(),
@@ -72,10 +74,9 @@ public class PredictionService {
         if (cost == null || cost.signum() < 0) {
             throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
-        BigDecimal highCostProbability = result.highCostProbability();
-        if (highCostProbability == null
-                || highCostProbability.compareTo(BigDecimal.ZERO) < 0
-                || highCostProbability.compareTo(BigDecimal.ONE) > 0) {
+        if (isNegativeOrNull(result.sameIncomeGroupMean())
+                || isNegativeOrNull(result.sameOutpatientGroupMean())
+                || isNegativeOrNull(result.overallMean())) {
             throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
         if (result.modelVersion() == null || result.modelVersion().isBlank()) {
@@ -90,6 +91,10 @@ public class PredictionService {
         if (result.preprocessingVersion() == null || result.preprocessingVersion().isBlank()) {
             throw new PredictionProviderException("MODEL_INVALID_RESPONSE", false);
         }
+    }
+
+    private boolean isNegativeOrNull(BigDecimal value) {
+        return value == null || value.signum() < 0;
     }
 
     private LocalDateTime now() {

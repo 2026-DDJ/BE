@@ -45,7 +45,6 @@ class PredictionSimulationSnapshotLoaderTest {
         when(prediction.getId()).thenReturn(7L);
         when(prediction.getAssessment()).thenReturn(assessment);
         when(prediction.getPredictedMedicalCost()).thenReturn(new BigDecimal("1000000"));
-        when(prediction.getHighCostProbability()).thenReturn(new BigDecimal("0.20"));
         when(assessment.getHeightCm()).thenReturn(new BigDecimal("170"));
         when(assessment.getBmi()).thenReturn(new BigDecimal("22.4913"));
         when(assessment.isExercises()).thenReturn(true);

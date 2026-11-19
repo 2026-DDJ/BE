@@ -10,7 +10,6 @@ public record PredictionSimulationSnapshot(
         BigDecimal bmi,
         boolean exercises,
         BigDecimal predictedMedicalCost,
-        BigDecimal highCostProbability,
         ModelFeatures modelFeatures
 ) {
 }

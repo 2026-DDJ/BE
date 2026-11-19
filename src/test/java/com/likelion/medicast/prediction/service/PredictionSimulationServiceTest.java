@@ -38,13 +38,14 @@ class PredictionSimulationServiceTest {
                 new BigDecimal("22.4913"),
                 true,
                 new BigDecimal("1000000"),
-                new BigDecimal("0.20"),
                 originalFeatures
         ));
         when(medicalCostPredictor.predict(org.mockito.ArgumentMatchers.any(ModelFeatures.class)))
                 .thenReturn(new PredictionResult(
                         new BigDecimal("900000"),
-                        new BigDecimal("0.10"),
+                        new BigDecimal("1100000"),
+                        new BigDecimal("1200000"),
+                        new BigDecimal("1000000"),
                         "external-model-v1",
                         ModelFeatureMapper.FEATURE_SCHEMA_VERSION,
                         "external-preprocessing-v1"

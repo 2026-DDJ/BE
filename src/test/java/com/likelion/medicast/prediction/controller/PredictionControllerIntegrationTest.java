@@ -5,6 +5,7 @@ import com.likelion.medicast.assessment.entity.IncomeRange;
 import com.likelion.medicast.assessment.entity.Region;
 import com.likelion.medicast.assessment.repository.HealthAssessmentRepository;
 import com.likelion.medicast.auth.security.JwtTokenProvider;
+import com.likelion.medicast.prediction.entity.Prediction;
 import com.likelion.medicast.prediction.repository.PredictionRepository;
 import com.likelion.medicast.user.entity.User;
 import com.likelion.medicast.user.repository.UserRepository;
@@ -100,10 +101,10 @@ class PredictionControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.predictedAnnualMedicalCost").isNumber())
-                .andExpect(jsonPath("$.highCostProbability").value(0.15))
-                .andExpect(jsonPath("$.sameAgeGenderAverageAnnualMedicalCost").isEmpty())
-                .andExpect(jsonPath("$.sameIncomeRegionAverageAnnualMedicalCost").isEmpty())
-                .andExpect(jsonPath("$.overallAverageAnnualMedicalCost").isEmpty())
+                .andExpect(jsonPath("$.sameIncomeGroupMean").value(1100000.00))
+                .andExpect(jsonPath("$.sameOutpatientVisitsGroupMean").value(1200000.00))
+                .andExpect(jsonPath("$.overallMean").value(1000000.00))
+                .andExpect(jsonPath("$.highCostProbability").doesNotExist())
                 .andExpect(jsonPath("$.currency").value("KRW"))
                 .andExpect(jsonPath("$.modelVersion").value("deterministic-fake-v1"))
                 .andExpect(jsonPath("$.completedAt").exists())
@@ -122,6 +123,12 @@ class PredictionControllerIntegrationTest {
         assertThat(saved.getHeightCm()).isEqualByComparingTo("170.0000");
         assertThat(saved.getWeightKg()).isEqualByComparingTo("65.0000");
         assertThat(saved.getBmi()).isEqualByComparingTo("22.4913");
+
+        Prediction savedPrediction = predictionRepository.findById(predictionId).orElseThrow();
+        assertThat(savedPrediction.getPredictedMedicalCost()).isEqualByComparingTo("1020000.00");
+        assertThat(savedPrediction.getSameIncomeGroupMean()).isEqualByComparingTo("1100000.00");
+        assertThat(savedPrediction.getSameOutpatientGroupMean()).isEqualByComparingTo("1200000.00");
+        assertThat(savedPrediction.getOverallMean()).isEqualByComparingTo("1000000.00");
 
         mockMvc.perform(get("/predictions/{predictionId}", predictionId)
                         .header("Authorization", "Bearer " + token))

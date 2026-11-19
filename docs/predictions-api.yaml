@@ -227,20 +227,16 @@ components:
           enum: [PENDING, COMPLETED, FAILED]
         predictedAnnualMedicalCost:
           type: [number, 'null']
-        highCostProbability:
+        sameIncomeGroupMean:
+          description: 동일 소득 구간의 평균 연간 의료비. 예측이 완료되지 않았으면 null이다.
           type: [number, 'null']
           minimum: 0
-          maximum: 1
-        sameAgeGenderAverageAnnualMedicalCost:
-          description: 동일 연령대·성별 집단의 평균 연간 의료비. 비교 통계가 없으면 null이다.
+        sameOutpatientVisitsGroupMean:
+          description: 동일 외래 이용 횟수 구간의 평균 연간 의료비. 예측이 완료되지 않았으면 null이다.
           type: [number, 'null']
           minimum: 0
-        sameIncomeRegionAverageAnnualMedicalCost:
-          description: 동일 소득 구간·지역 집단의 평균 연간 의료비. 비교 통계가 없으면 null이다.
-          type: [number, 'null']
-          minimum: 0
-        overallAverageAnnualMedicalCost:
-          description: 전체 집단의 평균 연간 의료비. 비교 통계가 없으면 null이다.
+        overallMean:
+          description: 전체 평균 연간 의료비. 예측이 완료되지 않았으면 null이다.
           type: [number, 'null']
           minimum: 0
         currency:
@@ -270,7 +266,7 @@ components:
           type: boolean
     SimulationCondition:
       type: object
-      required: [bmi, exercises, predictedAnnualMedicalCost, highCostProbability]
+      required: [bmi, exercises, predictedAnnualMedicalCost]
       properties:
         bmi:
           type: number
@@ -279,10 +275,6 @@ components:
         predictedAnnualMedicalCost:
           type: number
           minimum: 0
-        highCostProbability:
-          type: number
-          minimum: 0
-          maximum: 1
     SimulationResponse:
       type: object
       required: [predictionId, before, after, annualMedicalCostDifference, currency, modelVersion]

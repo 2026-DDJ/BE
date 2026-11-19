@@ -37,8 +37,14 @@ public class Prediction {
     @Column(name = "predicted_medical_cost", precision = 15, scale = 2)
     private BigDecimal predictedMedicalCost;
 
-    @Column(name = "high_cost_probability", precision = 8, scale = 7)
-    private BigDecimal highCostProbability;
+    @Column(name = "same_income_group_mean", precision = 15, scale = 2)
+    private BigDecimal sameIncomeGroupMean;
+
+    @Column(name = "same_outpatient_group_mean", precision = 15, scale = 2)
+    private BigDecimal sameOutpatientGroupMean;
+
+    @Column(name = "overall_mean", precision = 15, scale = 2)
+    private BigDecimal overallMean;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -75,27 +81,27 @@ public class Prediction {
 
     public void complete(
             BigDecimal predictedMedicalCost,
-            BigDecimal highCostProbability,
+            BigDecimal sameIncomeGroupMean,
+            BigDecimal sameOutpatientGroupMean,
+            BigDecimal overallMean,
             String modelVersion,
             String featureSchemaVersion,
             String preprocessingVersion,
             LocalDateTime completedAt
     ) {
         ensurePending();
-        if (predictedMedicalCost == null || predictedMedicalCost.signum() < 0) {
-            throw new IllegalArgumentException("예측 금액은 0 이상이어야 합니다.");
-        }
+        requireNonNegative(predictedMedicalCost, "예측 금액");
+        requireNonNegative(sameIncomeGroupMean, "동일 소득 구간 평균");
+        requireNonNegative(sameOutpatientGroupMean, "동일 외래 이용 횟수 구간 평균");
+        requireNonNegative(overallMean, "전체 평균");
         if (modelVersion == null || modelVersion.isBlank()) {
             throw new IllegalArgumentException("모델 버전은 필수입니다.");
         }
-        if (highCostProbability == null
-                || highCostProbability.compareTo(BigDecimal.ZERO) < 0
-                || highCostProbability.compareTo(BigDecimal.ONE) > 0) {
-            throw new IllegalArgumentException("고비용 확률은 0 이상 1 이하여야 합니다.");
-        }
 
         this.predictedMedicalCost = predictedMedicalCost;
-        this.highCostProbability = highCostProbability;
+        this.sameIncomeGroupMean = sameIncomeGroupMean;
+        this.sameOutpatientGroupMean = sameOutpatientGroupMean;
+        this.overallMean = overallMean;
         this.modelVersion = modelVersion;
         this.featureSchemaVersion = featureSchemaVersion;
         this.preprocessingVersion = preprocessingVersion;
@@ -108,7 +114,9 @@ public class Prediction {
     public void fail(String errorCode, boolean retryable, LocalDateTime completedAt) {
         ensurePending();
         this.predictedMedicalCost = null;
-        this.highCostProbability = null;
+        this.sameIncomeGroupMean = null;
+        this.sameOutpatientGroupMean = null;
+        this.overallMean = null;
         this.status = PredictionStatus.FAILED;
         this.errorCode = errorCode;
         this.retryable = retryable;
@@ -118,6 +126,12 @@ public class Prediction {
     private void ensurePending() {
         if (status != PredictionStatus.PENDING) {
             throw new IllegalStateException("대기 중인 예측만 완료하거나 실패 처리할 수 있습니다.");
+        }
+    }
+
+    private void requireNonNegative(BigDecimal value, String fieldName) {
+        if (value == null || value.signum() < 0) {
+            throw new IllegalArgumentException(fieldName + "은(는) 0 이상이어야 합니다.");
         }
     }
 }

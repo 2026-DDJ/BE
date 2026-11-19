@@ -49,7 +49,9 @@ public class HttpMedicalCostPredictor implements MedicalCostPredictor {
             }
             return new PredictionResult(
                     response.predictedAnnualMedicalCost(),
-                    response.highCostProbability(),
+                    meanOf(response.comparison(), Comparison::sameIncomeGroup),
+                    meanOf(response.comparison(), Comparison::sameOutpatientGroup),
+                    meanOf(response.comparison(), Comparison::overall),
                     modelVersion,
                     ModelFeatureMapper.FEATURE_SCHEMA_VERSION,
                     preprocessingVersion
@@ -90,10 +92,30 @@ public class HttpMedicalCostPredictor implements MedicalCostPredictor {
         return new PredictionProviderException("MODEL_UNAVAILABLE", true);
     }
 
+    private BigDecimal meanOf(Comparison comparison, java.util.function.Function<Comparison, GroupMean> selector) {
+        if (comparison == null) {
+            return null;
+        }
+        GroupMean groupMean = selector.apply(comparison);
+        return groupMean == null ? null : groupMean.mean();
+    }
+
     private record AiModelResponse(
             boolean success,
             BigDecimal predictedAnnualMedicalCost,
-            BigDecimal highCostProbability
+            Comparison comparison
+    ) {
+    }
+
+    private record Comparison(
+            GroupMean sameIncomeGroup,
+            GroupMean sameOutpatientGroup,
+            GroupMean overall
+    ) {
+    }
+
+    private record GroupMean(
+            BigDecimal mean
     ) {
     }
 }
