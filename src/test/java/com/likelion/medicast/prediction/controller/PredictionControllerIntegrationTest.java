@@ -135,7 +135,10 @@ class PredictionControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(predictionId))
                 .andExpect(jsonPath("$.assessmentId").value(assessmentId))
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.sameIncomeGroupMean").value(1100000.00))
+                .andExpect(jsonPath("$.sameOutpatientVisitsGroupMean").value(1200000.00))
+                .andExpect(jsonPath("$.overallMean").value(1000000.00));
     }
 
     @Test
