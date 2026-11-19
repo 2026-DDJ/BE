@@ -1,9 +1,20 @@
+<div align="center">
+
+<img src="docs/intro.gif" width="100%" alt="MEDICAST Intro" />
+
+<br/>
+<br>
+
+---
+<br>
+<br>
+
+</div>
 
 <div align="center">
 
 <img src="https://raw.githubusercontent.com/2026-DDJ/FE/main/src/assets/medicast-logo.svg" width="320" alt="MEDICAST Logo" />
 
-<br/><br/>
 
 ### Predict Your Health. Prepare Your Future.
 
